@@ -19,4 +19,6 @@ After you've completed that, you will need to edit the Graduation_Days.txt file.
 DayOfYear,Year,GraduationType
 Fill that out to as long as you have the information. The script will automatically delete a graduation on the day of the graduation so it is no longer recorded. On a future release, I hope to simplify the file into just 'YYYY-MM-DD' for simplicity.
 
+Finally, in the primary script GraduationCountDownBot.py, there is an area where it queries a set of tweets. Change that to your twitter bots handle as opposed to the one currently listed. You can also consider placing that in credentials to avoid spam if you're worried.
+
 After you've done all this, you should just be able to run the script! For further instructions, see [this tutorial](https://www.digitalocean.com/community/tutorials/how-to-create-a-twitterbot-with-python-3-and-the-tweepy-library).
