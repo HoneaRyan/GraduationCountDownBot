@@ -20,10 +20,10 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-day_of_year = datetime.now().timetuple().tm_yday
-current_year = int(datetime.now().year)
+DAY_OF_YEAR = datetime.now().timetuple().tm_yday
+CURRENT_YEAR = int(datetime.now().year)
 
-season_dict = {"spring" : 1, "summer" : 2, "winter" : 3}
+SEASON_DICT = {"spring" : 1, "summer" : 2, "winter" : 3}
 
 # This function deletes a graduation on the day it occurs
 def deleteRecentGraduation():
@@ -54,8 +54,8 @@ def getGraduationDates():
 
 
 # This just calculates the days until the selected graduation. Attempt at DRY
-def days_until(current_day, current_year, grad_day, grad_year):
-	return str((grad_year - current_year)*365 + (grad_day-current_day))
+def days_until(current_day, CURRENT_YEAR, grad_day, grad_year):
+	return str((grad_year - CURRENT_YEAR)*365 + (grad_day-current_day))
 
 
 
@@ -64,7 +64,7 @@ def createDailyTweet(graduations):
 	tweet_lines = []
 
 	days_until_closest = days_until(
-						day_of_year, current_year,
+						DAY_OF_YEAR, CURRENT_YEAR,
 						int(graduations[0][0]),
 						int(graduations[0][1]))
 
@@ -82,7 +82,7 @@ def createDailyTweet(graduations):
 		# Creates part of tweet for random future graduation
 		rand = randint(1,len(graduations)-1)
 		days_until_rand = days_until(
-						day_of_year, current_year,
+						DAY_OF_YEAR, CURRENT_YEAR,
 						int(graduations[rand][0]),
 						int(graduations[rand][1]))
 
@@ -106,8 +106,8 @@ def respond(graduations):
 	latest_tweets = pullLast24Hours()
 	min_year = graduations[0][1]
 	max_year = graduations[-1][1]
-	min_season = season_dict[graduations[0][2].split()[0].lower()]
-	max_season = season_dict[graduations[-1][2].split()[0].lower()]
+	min_season = SEASON_DICT[graduations[0][2].split()[0].lower()]
+	max_season = SEASON_DICT[graduations[-1][2].split()[0].lower()]
 	for tweet in latest_tweets:
 		days_until_grad = ''
 		status = tweet.text.split()
@@ -115,7 +115,7 @@ def respond(graduations):
 		tweetId = tweet.id
 		if len(status) != 3: break
 		season = status[1].lower()
-		season_key = season_dict[season]
+		season_key = SEASON_DICT[season]
 		status_year = status[2] # in case punctuation is added after year
 		if season == 'spring' or season == 'winter' or season == 'summer':
 			if (status_year > max_year or
@@ -129,7 +129,7 @@ def respond(graduations):
 					if (graduation[1] == status_year
 							and graduation[2].split()[0].lower() == season):
 						days_until_grad = days_until(
-										day_of_year, current_year,
+										DAY_OF_YEAR, CURRENT_YEAR,
 										int(graduation[0]),int(graduation[1]))
 				if days_until_grad == '': 
 					response += 'Your graduation is not on record. Sorry!'
@@ -147,12 +147,3 @@ def post_tweet(status):
 def reply(status, tweetId):
 	# print(status)
 	api.update_status(status, tweetId)
-
-
-'''if __name__ == '__main__':
-	day_of_year = datetime.now().timetuple().tm_yday
-	current_year = int(datetime.now().year)
-
-	graduations = getGraduationDates()
-	createDailyTweet(day_of_year, current_year, graduations)
-	respond(day_of_year, current_year, graduations)'''
