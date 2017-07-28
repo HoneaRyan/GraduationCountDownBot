@@ -5,15 +5,11 @@ countdown based on the current date and dates in the
 Graduation_Days.txt file
 
 Credit to the creator of the tweepy package for making this process 
-incredibly simple. 
-
-I use Python Anywhere's base scheduling feature to run this script 
-every day at 8:00 AM Central Time.'''
+incredibly simple. '''
 
 
 import tweepy
 import time
-import csv
 from datetime import datetime
 from credentials import *
 from random import randint
@@ -23,6 +19,9 @@ from sys import exit
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
+
+day_of_year = datetime.now().timetuple().tm_yday
+current_year = int(datetime.now().year)
 
 season_dict = {"spring" : 1, "summer" : 2, "winter" : 3}
 
@@ -40,7 +39,8 @@ def pullLast24Hours():
 	max_tweets = 1000
 	tweets = [tweet for tweet in 
 				tweepy.Cursor(api.search, q=query).items(max_tweets)
-				if (datetime.now() - tweet.created_at).days < 1]
+				if (datetime.utcnow() - tweet.created_at).days < 1
+					and (datetime.utcnow() - tweet.created_at).seconds < 3600]
 	return tweets
 
 
@@ -60,11 +60,11 @@ def days_until(current_day, current_year, grad_day, grad_year):
 
 
 # This creates the daily tweet noting days until closest and random graduation
-def createDailyTweet(day, year, graduations):
+def createDailyTweet(graduations):
 	tweet_lines = []
 
 	days_until_closest = days_until(
-						day, year,
+						day_of_year, current_year,
 						int(graduations[0][0]),
 						int(graduations[0][1]))
 
@@ -82,7 +82,7 @@ def createDailyTweet(day, year, graduations):
 		# Creates part of tweet for random future graduation
 		rand = randint(1,len(graduations)-1)
 		days_until_rand = days_until(
-						day, year,
+						day_of_year, current_year,
 						int(graduations[rand][0]),
 						int(graduations[rand][1]))
 
@@ -102,7 +102,7 @@ def createDailyTweet(day, year, graduations):
 # any match the criterion for a response. If they tweet with the following
 # format: [@APGradCountDown season yyyy] then a response will be made with 
 # how many days they have until they graduate.
-def respond(day, year, graduations):
+def respond(graduations):
 	latest_tweets = pullLast24Hours()
 	min_year = graduations[0][1]
 	max_year = graduations[-1][1]
@@ -116,20 +116,20 @@ def respond(day, year, graduations):
 		if len(status) != 3: break
 		season = status[1].lower()
 		season_key = season_dict[season]
-		status_year = status[2]
+		status_year = status[2] # in case punctuation is added after year
 		if season == 'spring' or season == 'winter' or season == 'summer':
 			if (status_year > max_year or
-					(status_year == year and season_key > max_season)):
+					(status_year == max_year and season_key > max_season)):
 				response = response + 'You\'ve got a long way to go!'
 			elif (status_year < min_year or
-					(status_year == year and season_key < min_season)):
+					(status_year == min_year and season_key < min_season)):
 				response = response + 'You already graduated!'
 			else:
 				for graduation in graduations:
 					if (graduation[1] == status_year
 							and graduation[2].split()[0].lower() == season):
 						days_until_grad = days_until(
-										day, year,
+										day_of_year, current_year,
 										int(graduation[0]),int(graduation[1]))
 				if days_until_grad == '': 
 					response += 'Your graduation is not on record. Sorry!'
@@ -149,10 +149,10 @@ def reply(status, tweetId):
 	api.update_status(status, tweetId)
 
 
-if __name__ == '__main__':
+'''if __name__ == '__main__':
 	day_of_year = datetime.now().timetuple().tm_yday
 	current_year = int(datetime.now().year)
 
 	graduations = getGraduationDates()
 	createDailyTweet(day_of_year, current_year, graduations)
-	respond(day_of_year, current_year, graduations)
+	respond(day_of_year, current_year, graduations)'''
